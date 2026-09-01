@@ -1,0 +1,398 @@
+{
+  "info": {
+    "name": "Bbo Shop API",
+    "description": "Postman collection generated from Spring Boot controllers in this project.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Greeting",
+      "item": [
+        {
+          "name": "Get Greeting",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/greeting"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+243970000000\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/send-otp"
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+243970000000\",\n  \"code\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/verify"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "subdirectory", "value": "products", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/files/upload"
+          }
+        },
+        {
+          "name": "Upload Multiple Files",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": "" },
+                { "key": "files", "type": "file", "src": "" },
+                { "key": "subdirectory", "value": "products", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/files/upload-multiple"
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files?filename=products/example.png",
+              "host": ["{{baseUrl}}"],
+              "path": ["files"],
+              "query": [
+                { "key": "filename", "value": "products/example.png" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shop Categories",
+      "item": [
+        {
+          "name": "Create Shop Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Restaurants\",\n  \"description\": \"Shop category\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/shop-categories"
+          }
+        },
+        { "name": "Get All Shop Categories", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/shop-categories" } },
+        { "name": "Get Shop Category By Id", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/shop-categories/{{shopCategoryId}}" } },
+        { "name": "Delete Shop Category", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/shop-categories/{{shopCategoryId}}" } }
+      ]
+    },
+    {
+      "name": "Product Categories",
+      "item": [
+        {
+          "name": "Create Product Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics\",\n  \"slug\": \"electronics\",\n  \"parentId\": null,\n  \"active\": true,\n  \"displayOrder\": 0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/product-categories"
+          }
+        },
+        { "name": "Get All Product Categories", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/product-categories" } },
+        { "name": "Get Product Category By Id", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/product-categories/{{productCategoryId}}" } },
+        { "name": "Get Product Category By Slug", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/product-categories/slug/{{categorySlug}}" } },
+        {
+          "name": "Update Product Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics and Gadgets\",\n  \"slug\": \"electronics\",\n  \"parentId\": null,\n  \"active\": true,\n  \"displayOrder\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/product-categories/{{productCategoryId}}"
+          }
+        },
+        { "name": "Delete Product Category", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/product-categories/{{productCategoryId}}" } }
+      ]
+    },
+    {
+      "name": "Galleries",
+      "item": [
+        {
+          "name": "Create Gallery",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gallery Kin\",\n  \"description\": \"Center\",\n  \"isVerified\": true,\n  \"address\": \"Gombe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/galleries"
+          }
+        },
+        { "name": "Get Gallery By Id", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/galleries/id/{{galleryId}}" } },
+        { "name": "Get All Galleries", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/galleries/all" } },
+        {
+          "name": "Update Gallery",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gallery Kin Updated\",\n  \"description\": \"New desc\",\n  \"isVerified\": true,\n  \"address\": \"Gombe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/galleries/{{galleryId}}"
+          }
+        },
+        { "name": "Delete Gallery", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/galleries/{{galleryId}}" } }
+      ]
+    },
+    {
+      "name": "Shops",
+      "item": [
+        {
+          "name": "Create Shop",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"BBO Market\",\n  \"description\": \"Test shop\",\n  \"telephone\": \"+243970000000\",\n  \"address\": \"Kinshasa\",\n  \"latitude\": -4.325,\n  \"longitude\": 15.322,\n  \"userId\": 1,\n  \"categoryId\": 1,\n  \"isVerifier\": true,\n  \"galeryId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/shops"
+          }
+        },
+        { "name": "Get Shop By Id", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/shops/id/{{shopId}}" } },
+        { "name": "Get All Shops", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/shops/all" } },
+        {
+          "name": "Update Shop",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"BBO Market 2\",\n  \"description\": \"Updated shop\",\n  \"telephone\": \"+243970000001\",\n  \"address\": \"Kinshasa\",\n  \"latitude\": -4.325,\n  \"longitude\": 15.322,\n  \"userId\": 1,\n  \"categoryId\": 1,\n  \"isVerifier\": true,\n  \"galeryId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/shops/{{shopId}}"
+          }
+        },
+        { "name": "Delete Shop", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/shops/{{shopId}}" } },
+        { "name": "Get Shops By Gallery", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/shops/galery/{{galleryId}}?page=0&size=100" } },
+        { "name": "Get Shops By Category", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/shops/category/{{shopCategoryId}}?page=0&size=100" } },
+        { "name": "Get Shops By Designation", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/shops/designation/{{designation}}?page=0&size=100" } }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Create Product (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"iPhone 13\",\n  \"description\": \"Test product\",\n  \"price\": 599.99,\n  \"currency\": \"USD\",\n  \"status\": \"ACTIVE\",\n  \"shopId\": 1,\n  \"categoryId\": 1,\n  \"imageUrls\": [\"https://example.com/img1.jpg\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/products"
+          }
+        },
+        {
+          "name": "Create Product (Multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "product", "type": "text", "value": "{\"name\":\"iPhone 13\",\"description\":\"Test product\",\"price\":599.99,\"currency\":\"USD\",\"status\":\"ACTIVE\",\"shopId\":1,\"categoryId\":1,\"imageUrls\":[]}" },
+                { "key": "images", "type": "file", "src": "" },
+                { "key": "images", "type": "file", "src": "" }
+              ]
+            },
+            "url": "{{baseUrl}}/products"
+          }
+        },
+        { "name": "Get All Products", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products?page=0&size=10" } },
+        { "name": "Top Liked Products", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/top-liked?page=0&size=10" } },
+        { "name": "Get Product By Id", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/{{productId}}" } },
+        { "name": "Toggle Product Like", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/products/{{productId}}/like" } },
+        { "name": "Get Product Like Status", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/products/{{productId}}/like" } },
+        { "name": "Get Products By Shop", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/shop/{{shopId}}?page=0&size=10" } },
+        { "name": "Get Products By Category Slug", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/category/{{categorySlug}}?page=0&size=10" } },
+        { "name": "Get Products By Category Id", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/categoryId/{{productCategoryId}}?page=0&size=10" } },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"iPhone 13 Pro\",\n  \"description\": \"Updated product\",\n  \"price\": 650,\n  \"currency\": \"USD\",\n  \"status\": \"ACTIVE\",\n  \"shopId\": 1,\n  \"categoryId\": 1,\n  \"imageUrls\": [\"https://example.com/new.jpg\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/products/{{productId}}"
+          }
+        },
+        { "name": "Delete Product", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/products/{{productId}}" } },
+        { "name": "Search Products", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/search?keyword=phone&categoryId=1&minPrice=100&maxPrice=2000&currency=USD&prodStatus=NEW&shopId=1&page=0&size=20&sortBy=createdAt&sortDir=DESC" } },
+        { "name": "Top Ordered Products", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/top-ordered?page=0&size=20" } },
+        { "name": "New Products", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/new?page=0&size=20" } },
+        { "name": "Top Ordered Occasion Products", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/top-ordered/occasion?page=0&size=20" } },
+        { "name": "Top Ordered New Products", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/products/top-ordered/new?page=0&size=20" } }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"shopId\": 1,\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"productName\": \"iPhone 13\",\n      \"unitPrice\": 599.99,\n      \"quantity\": 1,\n      \"productImageUrl\": \"https://example.com/img1.jpg\"\n    }\n  ],\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"CASH_ON_DELIVERY\",\n  \"deliveryAddress\": \"Kinshasa\",\n  \"phoneContact\": \"+243970000000\",\n  \"note\": \"Fast delivery\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/orders"
+          }
+        },
+        { "name": "Get Order By Id", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/{{orderId}}" } },
+        { "name": "Get Order By Number", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/number/{{orderNumber}}" } },
+        { "name": "Get All Orders", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders?page=0&size=20" } },
+        { "name": "Get Orders By User", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/user/{{userId}}?page=0&size=20" } },
+        { "name": "Get Orders By Shop", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/shop/{{shopId}}?page=0&size=20" } },
+        { "name": "Get Orders By Shop And Status", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/shop/{{shopId}}/status/PENDING?page=0&size=20" } },
+        { "name": "Get Orders By User And Status", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/user/{{userId}}/status/PENDING?page=0&size=20" } },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/status"
+          }
+        },
+        { "name": "Update Payment Status", "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/{{orderId}}/payment-status?paymentStatus=PAID" } },
+        { "name": "Delete Order", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/{{orderId}}" } },
+        { "name": "Count Orders By Shop And Status", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders/shop/{{shopId}}/count/PENDING" } }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "shopId", "value": "1" },
+    { "key": "productId", "value": "1" },
+    { "key": "orderId", "value": "1" },
+    { "key": "orderNumber", "value": "BBO-000001" },
+    { "key": "userId", "value": "1" },
+    { "key": "galleryId", "value": "1" },
+    { "key": "shopCategoryId", "value": "1" },
+    { "key": "productCategoryId", "value": "1" },
+    { "key": "categorySlug", "value": "electronics" },
+    { "key": "designation", "value": "BBO Market" }
+  ]
+}

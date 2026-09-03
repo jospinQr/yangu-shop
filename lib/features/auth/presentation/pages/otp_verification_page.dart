@@ -135,9 +135,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Connexion réussie.')),
-    );
+    final session = ref.read(authControllerProvider).session;
+    final message = session?.localStorageError ?? 'Connexion réussie.';
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
     context.goNamed(AppRouteNames.home);
   }
 

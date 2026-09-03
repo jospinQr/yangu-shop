@@ -9,4 +9,8 @@ abstract interface class AuthRepository {
     required String phoneNumber,
     required String code,
   });
+
+  Future<Either<Failure, AuthSession?>> restoreSession();
+
+  Future<Either<Failure, Unit>> signOut();
 }

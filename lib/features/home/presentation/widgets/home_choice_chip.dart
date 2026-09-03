@@ -29,19 +29,17 @@ class HomeChoiceChip extends StatelessWidget {
         selected: isSelected,
         showCheckmark: false,
         onSelected: (_) => onSelected(),
-        backgroundColor: AppColors.warmCream,
+        backgroundColor: AppColors.sand,
         selectedColor: AppColors.chocolate,
         side: BorderSide(
-          color: isSelected
-              ? AppColors.darkChocolate
-              : AppColors.cocoa.withValues(alpha: .28),
+          color: AppColors.sand,
           width: isSelected ? .8 : .6,
         ),
-        elevation: isSelected ? 2 : 0,
+        elevation: isSelected ? 2 : 8,
         pressElevation: 1,
         shadowColor: AppColors.darkChocolate.withValues(alpha: .16),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         labelStyle: theme.textTheme.labelLarge?.copyWith(
           color: isSelected ? AppColors.warmCream : AppColors.darkChocolate,
           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,

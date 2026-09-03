@@ -1,6 +1,6 @@
 class AppConfig {
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8081/api/v1',
+    defaultValue: 'http://16.192.215.191:8081/api/v1',
   );
 }

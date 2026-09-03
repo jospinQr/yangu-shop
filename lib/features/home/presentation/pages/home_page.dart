@@ -18,25 +18,42 @@ class HomePage extends ConsumerWidget {
         children: [
           const SearchButton(),
           const SizedBox(height: 8),
-          SizedBox(
-            height: 42,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              scrollDirection: Axis.horizontal,
-              itemCount: HomeCategory.values.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final category = HomeCategory.values[index];
-                return HomeChoiceChip(
-                  label: category.label,
-                  isSelected: selectedCategory == category,
-                  onSelected: () {
-                    ref
-                        .read(homeCategoryControllerProvider.notifier)
-                        .select(category);
-                  },
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: SizedBox(
+              height: 42,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (final category in HomeCategory.values) ...[
+                            HomeChoiceChip(
+                              label: category.label,
+                              isSelected: selectedCategory == category,
+                              onSelected: () {
+                                ref
+                                    .read(
+                                      homeCategoryControllerProvider.notifier,
+                                    )
+                                    .select(category);
+                              },
+                            ),
+                            if (category != HomeCategory.values.last)
+                              const SizedBox(width: 10),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           Expanded(

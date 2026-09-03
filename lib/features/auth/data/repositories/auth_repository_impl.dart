@@ -1,5 +1,6 @@
 import 'package:bbo_shop_app/core/errors/failure.dart';
 import 'package:bbo_shop_app/core/network/failure_mapper.dart';
+import 'package:bbo_shop_app/core/security/auth_token_store.dart';
 import 'package:bbo_shop_app/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:bbo_shop_app/features/auth/data/mappers/auth_session_mapper.dart';
 import 'package:bbo_shop_app/features/auth/domain/entities/auth_session.dart';
@@ -8,9 +9,10 @@ import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  const AuthRepositoryImpl(this._remoteDataSource);
+  const AuthRepositoryImpl(this._remoteDataSource, this._tokenStore);
 
   final AuthRemoteDataSource _remoteDataSource;
+  final AuthTokenStore _tokenStore;
 
   @override
   Future<Either<Failure, Unit>> requestOtp(String phoneNumber) async {
@@ -40,7 +42,18 @@ class AuthRepositoryImpl implements AuthRepository {
         phoneNumber: phoneNumber,
         code: code,
       );
-      return right(sessionDto.toDomain(phoneNumber));
+      final session = sessionDto.toDomain(phoneNumber);
+      try {
+        await _tokenStore.saveAccessToken(session.accessToken);
+        return right(session);
+      } on Object {
+        return right(
+          session.copyWith(
+            isStoredLocally: false,
+            localStorageError: 'Connexion réussie, mais la session ne peut pas être conservée sur cet appareil.',
+          ),
+        );
+      }
     } on DioException catch (error) {
       return left(mapDioException(error));
     } on FormatException catch (error) {
@@ -56,6 +69,48 @@ class AuthRepositoryImpl implements AuthRepository {
         Failure(
           type: FailureType.unexpected,
           message: 'Impossible de confirmer le code pour le moment.',
+          cause: error,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthSession?>> restoreSession() async {
+    try {
+      final token = await _tokenStore.readAccessToken();
+      if (token == null) {
+        return right(null);
+      }
+
+      final session = AuthSession.fromAccessToken(token);
+      if (session.isExpired) {
+        await _tokenStore.clearAccessToken();
+        return right(null);
+      }
+
+      return right(session);
+    } on Object catch (error) {
+      return left(
+        Failure(
+          type: FailureType.unexpected,
+          message: 'Impossible de restaurer la session locale.',
+          cause: error,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> signOut() async {
+    try {
+      await _tokenStore.clearAccessToken();
+      return right(unit);
+    } on Object catch (error) {
+      return left(
+        Failure(
+          type: FailureType.unexpected,
+          message: 'Impossible de fermer la session locale.',
           cause: error,
         ),
       );

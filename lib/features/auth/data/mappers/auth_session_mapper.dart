@@ -3,6 +3,6 @@ import 'package:bbo_shop_app/features/auth/domain/entities/auth_session.dart';
 
 extension AuthSessionMapper on AuthSessionDto {
   AuthSession toDomain(String phoneNumber) {
-    return AuthSession(phoneNumber: phoneNumber, accessToken: token);
+    return AuthSession.fromAccessToken(token, phoneNumber: phoneNumber);
   }
 }

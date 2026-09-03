@@ -10,10 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class MainPage extends ConsumerStatefulWidget {
-  const MainPage({
-    required this.navigationShell,
-    super.key,
-  });
+  const MainPage({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
@@ -38,9 +35,11 @@ class _MainPageState extends ConsumerState<MainPage> {
     final authState = ref.watch(authControllerProvider);
     final navigationState = ref.watch(mainNavigationControllerProvider);
     final isAuthenticated = authState.isAuthenticated;
+    final isRestoringSession = authState.isRestoringSession;
     final currentIndex = widget.navigationShell.currentIndex;
     _showLoginPromptIfNeeded(
       isAuthenticated: isAuthenticated,
+      isRestoringSession: isRestoringSession,
       navigationState: navigationState,
     );
 
@@ -73,7 +72,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                 index,
                 initialLocation: index == currentIndex,
               );
-              if (index == 3 && !isAuthenticated) {
+              if (index == 3 && !isAuthenticated && !isRestoringSession) {
                 _openLoginSheet();
               }
             },
@@ -135,9 +134,11 @@ class _MainPageState extends ConsumerState<MainPage> {
 
   void _showLoginPromptIfNeeded({
     required bool isAuthenticated,
+    required bool isRestoringSession,
     required MainNavigationState navigationState,
   }) {
     if (isAuthenticated ||
+        isRestoringSession ||
         navigationState.isAutoLoginPromptDismissed ||
         navigationState.isLoginSheetOpen) {
       return;
@@ -154,9 +155,7 @@ class _MainPageState extends ConsumerState<MainPage> {
     });
   }
 
-  Future<void> _openLoginSheet({
-    bool markAutoPromptAsDismissed = false,
-  }) async {
+  Future<void> _openLoginSheet({bool markAutoPromptAsDismissed = false}) async {
     final navigationController = ref.read(
       mainNavigationControllerProvider.notifier,
     );

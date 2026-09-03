@@ -1,9 +1,11 @@
 import 'package:bbo_shop_app/core/config/app_config.dart';
+import 'package:bbo_shop_app/core/network/auth_header_interceptor.dart';
+import 'package:bbo_shop_app/core/security/auth_token_store.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final dioProvider = Provider<Dio>((ref) {
-  return Dio(
+  final dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.apiBaseUrl,
       connectTimeout: const Duration(seconds: 6),
@@ -15,4 +17,9 @@ final dioProvider = Provider<Dio>((ref) {
       },
     ),
   );
+
+  dio.interceptors.add(
+    AuthHeaderInterceptor(ref.watch(authTokenStoreProvider)),
+  );
+  return dio;
 });

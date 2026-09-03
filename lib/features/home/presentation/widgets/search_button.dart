@@ -6,25 +6,28 @@ class SearchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 42, vertical: 2),
-      child: Card(
-        color: AppColors.warmCream,
-        shape: RoundedSuperellipseBorder(
-          borderRadius: BorderRadius.circular(100),
-        ),
-        child: Padding(
-          padding: EdgeInsetsGeometry.all(16),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.search_outlined),
-              Text(
-                "Commencer ma recherche",
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ],
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 2),
+        child: Card(
+          color: AppColors.warmCream,
+          shape: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.search_outlined),
+                SizedBox(width: 8),
+                Text(
+                  "Commencer ma recherche",
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
           ),
         ),
       ),

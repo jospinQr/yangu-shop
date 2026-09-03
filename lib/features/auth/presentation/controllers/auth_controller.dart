@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:bbo_shop_app/features/auth/domain/usecases/request_otp_use_case.dart';
+import 'package:bbo_shop_app/features/auth/domain/usecases/restore_auth_session_use_case.dart';
+import 'package:bbo_shop_app/features/auth/domain/usecases/sign_out_use_case.dart';
 import 'package:bbo_shop_app/features/auth/domain/usecases/verify_otp_use_case.dart';
 import 'package:bbo_shop_app/features/auth/presentation/controllers/auth_state.dart';
 import 'package:bbo_shop_app/features/auth/presentation/providers/auth_dependency_providers.dart';
@@ -7,12 +11,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AuthController extends Notifier<AuthState> {
   late final RequestOtpUseCase _requestOtpUseCase;
   late final VerifyOtpUseCase _verifyOtpUseCase;
+  late final RestoreAuthSessionUseCase _restoreAuthSessionUseCase;
+  late final SignOutUseCase _signOutUseCase;
 
   @override
   AuthState build() {
     _requestOtpUseCase = ref.watch(requestOtpUseCaseProvider);
     _verifyOtpUseCase = ref.watch(verifyOtpUseCaseProvider);
-    return const AuthState.unauthenticated();
+    _restoreAuthSessionUseCase = ref.watch(restoreAuthSessionUseCaseProvider);
+    _signOutUseCase = ref.watch(signOutUseCaseProvider);
+    unawaited(_restoreSession());
+    return const AuthState.restoring();
+  }
+
+  Future<void> _restoreSession() async {
+    final result = await _restoreAuthSessionUseCase();
+
+    result.match(
+      (failure) {
+        state = state.copyWith(
+          isRestoringSession: false,
+          clearSession: true,
+          restoreSessionError: failure.message,
+        );
+      },
+      (session) {
+        state = state.copyWith(
+          isRestoringSession: false,
+          session: session,
+          clearSession: session == null,
+          clearRestoreSessionError: true,
+        );
+      },
+    );
   }
 
   Future<bool> requestOtp(String phoneNumber) async {
@@ -59,7 +90,26 @@ class AuthController extends Notifier<AuthState> {
         return false;
       },
       (session) {
-        state = state.copyWith(isVerifyingOtp: false, session: session);
+        state = state.copyWith(
+          isVerifyingOtp: false,
+          session: session,
+          clearRestoreSessionError: true,
+        );
+        return true;
+      },
+    );
+  }
+
+  Future<bool> signOut() async {
+    final result = await _signOutUseCase();
+
+    return result.match(
+      (failure) {
+        state = state.copyWith(restoreSessionError: failure.message);
+        return false;
+      },
+      (_) {
+        state = const AuthState.unauthenticated();
         return true;
       },
     );

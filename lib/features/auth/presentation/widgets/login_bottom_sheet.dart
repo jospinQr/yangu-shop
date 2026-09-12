@@ -1,13 +1,17 @@
 import 'package:bbo_shop_app/core/widgets/app_action_button.dart';
-import 'package:bbo_shop_app/core/widgets/app_animated_entrance.dart';
 import 'package:bbo_shop_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LoginBottomSheet extends ConsumerStatefulWidget {
-  const LoginBottomSheet({required this.onOtpRequested, super.key});
+  const LoginBottomSheet({
+    required this.onClose,
+    required this.onOtpRequested,
+    super.key,
+  });
 
+  final VoidCallback onClose;
   final ValueChanged<String> onOtpRequested;
 
   @override
@@ -31,91 +35,94 @@ class _LoginBottomSheetState extends ConsumerState<LoginBottomSheet> {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: AppAnimatedEntrance(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-
-                              child: Icon(
-                                Icons.lock_open_rounded,
-                                color: theme.colorScheme.primary,
+      child: RepaintBoundary(
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Form(
+                  key: _formKey,
+                  child: _LoginSheetContentEntrance(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              'Connexion',
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Fermer',
-                            onPressed: authState.isRequestingOtp
-                                ? null
-                                : () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Entrez votre numéro de téléphone pour recevoir un code à 6 chiffres.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: .72,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      PhoneNumberField(controller: _phoneController),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        child: authState.requestOtpError == null
-                            ? const SizedBox.shrink()
-                            : Padding(
-                                key: ValueKey(authState.requestOtpError),
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Text(
-                                  authState.requestOtpError!,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.error,
-                                  ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Icon(
+                                  Icons.lock_open_rounded,
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
-                      ),
-                      const SizedBox(height: 22),
-                      AppActionButton(
-                        label: 'Recevoir le code',
-                        icon: Icons.sms_rounded,
-                        onPressed: _requestOtp,
-                        isLoading: authState.isRequestingOtp,
-                      ),
-                    ],
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                'Connexion',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Fermer',
+                              onPressed: authState.isRequestingOtp
+                                  ? null
+                                  : widget.onClose,
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Entrez votre numéro de téléphone pour recevoir un code à 6 chiffres.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: .72,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        PhoneNumberField(controller: _phoneController),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: authState.requestOtpError == null
+                              ? const SizedBox.shrink()
+                              : Padding(
+                                  key: ValueKey(authState.requestOtpError),
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Text(
+                                    authState.requestOtpError!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(height: 22),
+                        AppActionButton(
+                          label: 'Recevoir le code',
+                          icon: Icons.sms_rounded,
+                          onPressed: _requestOtp,
+                          isLoading: authState.isRequestingOtp,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -141,8 +148,36 @@ class _LoginBottomSheetState extends ConsumerState<LoginBottomSheet> {
       return;
     }
 
-    Navigator.of(context).pop();
     widget.onOtpRequested(phoneNumber);
+  }
+}
+
+class _LoginSheetContentEntrance extends StatelessWidget {
+  const _LoginSheetContentEntrance({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).disableAnimations) {
+      return child;
+    }
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
   }
 }
 
@@ -162,6 +197,13 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
   void initState() {
     super.initState();
     _focusNode.addListener(_handleFocusChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future<void>.delayed(const Duration(milliseconds: 260), () {
+        if (mounted) {
+          _focusNode.requestFocus();
+        }
+      });
+    });
   }
 
   @override
@@ -197,7 +239,6 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
       child: TextFormField(
         controller: widget.controller,
         focusNode: _focusNode,
-        autofocus: true,
         keyboardType: TextInputType.phone,
         textInputAction: TextInputAction.done,
         autofillHints: const [AutofillHints.telephoneNumber],

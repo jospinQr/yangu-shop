@@ -6,15 +6,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
-class SplashScreen extends ConsumerWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _loadingAnimationController;
+  bool _hasNavigatedToHome = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadingAnimationController = AnimationController(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _loadingAnimationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen(startupCheckProvider, (previous, next) {
       final canReachApi = next.asData?.value;
-      if (canReachApi == true && context.mounted) {
-        context.goNamed(AppRouteNames.home);
+      if (canReachApi == true) {
+        _goToHome();
       }
     });
 
@@ -101,12 +122,20 @@ class SplashScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          SizedBox.square(
-                            dimension: animationSize,
-                            child: Lottie.asset(
-                              'assets/lottie/logo.json',
-                              repeat: true,
-                              fit: BoxFit.contain,
+                          RepaintBoundary(
+                            child: Semantics(
+                              label: 'Chargement de YanguShop',
+                              liveRegion: true,
+                              child: SizedBox.square(
+                                dimension: animationSize,
+                                child: Lottie.asset(
+                                  'assets/lottie/logo.json',
+                                  controller: _loadingAnimationController,
+                                  repeat: false,
+                                  fit: BoxFit.contain,
+                                  onLoaded: _startLoadingAnimation,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -121,8 +150,6 @@ class SplashScreen extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 12),
                       Text('Par Atelog', style: theme.textTheme.bodySmall),
                     ],
                   ),
@@ -133,5 +160,29 @@ class SplashScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _goToHome() {
+    if (_hasNavigatedToHome || !mounted) {
+      return;
+    }
+
+    _hasNavigatedToHome = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      context.goNamed(AppRouteNames.home);
+    });
+  }
+
+  void _startLoadingAnimation(LottieComposition composition) {
+    if (!mounted || _loadingAnimationController.isAnimating) {
+      return;
+    }
+
+    _loadingAnimationController
+      ..duration = composition.duration
+      ..repeat();
   }
 }

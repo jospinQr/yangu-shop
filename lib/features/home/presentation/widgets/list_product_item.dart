@@ -60,20 +60,9 @@ class _ListProductItemContent extends StatelessWidget {
           child: SizedBox(
             width: ListProductItem.width,
             height: ListProductItem._imageHeight,
-            child: Image.network(
-              product.photoUrl,
-              fit: BoxFit.cover,
-              cacheWidth: imageCacheWidth,
-              filterQuality: FilterQuality.low,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) {
-                  return child;
-                }
-                return const _ProductImageFallback();
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return const _ProductImageFallback();
-              },
+            child: _ProductPhoto(
+              photoUrl: product.photoUrl,
+              imageCacheWidth: imageCacheWidth,
             ),
           ),
         ),
@@ -111,6 +100,49 @@ class _ListProductItemContent extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ProductPhoto extends StatelessWidget {
+  const _ProductPhoto({required this.photoUrl, required this.imageCacheWidth});
+
+  final String photoUrl;
+  final int imageCacheWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+
+    return Image.network(
+      photoUrl,
+      fit: BoxFit.cover,
+      cacheWidth: imageCacheWidth,
+      filterQuality: FilterQuality.low,
+      gaplessPlayback: true,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || reduceMotion) {
+          return child;
+        }
+
+        final hasFrame = frame != null;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            const _ProductImageFallback(),
+            AnimatedOpacity(
+              opacity: hasFrame ? 1 : 0,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              child: child,
+            ),
+          ],
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return const _ProductImageFallback();
+      },
     );
   }
 }

@@ -1,21 +1,60 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:bbo_shop_app/features/home/presentation/controllers/home_category_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+const _homeProductsPageSize = 10;
 
 final homeFeedSectionsProvider = Provider<List<HomeProductSection>>((ref) {
   final category = ref.watch(homeCategoryControllerProvider);
   return _buildSections(category);
 });
 
+final homeFeedRepositoryProvider = Provider<HomeFeedRepository>((ref) {
+  return const MockHomeFeedRepository();
+});
+
+final homeProductPageControllerProvider =
+    NotifierProvider.family<
+      HomeProductPageController,
+      HomeProductPageState,
+      HomeProductSectionKey
+    >((sectionKey) => HomeProductPageController(sectionKey));
+
 class HomeProductSection {
   const HomeProductSection({
     required this.id,
     required this.title,
-    required this.products,
+    required this.key,
   });
 
   final String id;
   final String title;
-  final List<HomeProductPreview> products;
+  final HomeProductSectionKey key;
+}
+
+class HomeProductSectionKey {
+  const HomeProductSectionKey({
+    required this.category,
+    required this.sectionIndex,
+  });
+
+  final HomeCategory category;
+  final int sectionIndex;
+
+  String get id => '${category.name}-${sectionIndex + 1}';
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is HomeProductSectionKey &&
+            other.category == category &&
+            other.sectionIndex == sectionIndex;
+  }
+
+  @override
+  int get hashCode => Object.hash(category, sectionIndex);
 }
 
 class HomeProductPreview {
@@ -34,40 +73,280 @@ class HomeProductPreview {
   final String photoUrl;
 }
 
+class HomeProductPageState {
+  const HomeProductPageState({
+    required this.products,
+    required this.pageNumber,
+    required this.pageSize,
+    required this.totalElements,
+    required this.totalPages,
+    required this.isLast,
+    required this.isInitialLoading,
+    required this.isLoadingNextPage,
+    this.errorMessage,
+  });
+
+  factory HomeProductPageState.initial({required int pageSize}) {
+    return HomeProductPageState(
+      products: const [],
+      pageNumber: -1,
+      pageSize: pageSize,
+      totalElements: 0,
+      totalPages: 0,
+      isLast: false,
+      isInitialLoading: true,
+      isLoadingNextPage: false,
+    );
+  }
+
+  final List<HomeProductPreview> products;
+  final int pageNumber;
+  final int pageSize;
+  final int totalElements;
+  final int totalPages;
+  final bool isLast;
+  final bool isInitialLoading;
+  final bool isLoadingNextPage;
+  final String? errorMessage;
+
+  int get nextPageNumber => pageNumber + 1;
+
+  bool get canLoadNextPage {
+    return !isInitialLoading && !isLoadingNextPage && !isLast;
+  }
+
+  bool get shouldShowFooter {
+    return isInitialLoading || isLoadingNextPage || errorMessage != null;
+  }
+
+  HomeProductPageState copyWith({
+    List<HomeProductPreview>? products,
+    int? pageNumber,
+    int? pageSize,
+    int? totalElements,
+    int? totalPages,
+    bool? isLast,
+    bool? isInitialLoading,
+    bool? isLoadingNextPage,
+    String? errorMessage,
+    bool clearErrorMessage = false,
+  }) {
+    return HomeProductPageState(
+      products: products ?? this.products,
+      pageNumber: pageNumber ?? this.pageNumber,
+      pageSize: pageSize ?? this.pageSize,
+      totalElements: totalElements ?? this.totalElements,
+      totalPages: totalPages ?? this.totalPages,
+      isLast: isLast ?? this.isLast,
+      isInitialLoading: isInitialLoading ?? this.isInitialLoading,
+      isLoadingNextPage: isLoadingNextPage ?? this.isLoadingNextPage,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? this.errorMessage,
+    );
+  }
+}
+
+class HomeProductPageController extends Notifier<HomeProductPageState> {
+  HomeProductPageController(this._sectionKey);
+
+  final HomeProductSectionKey _sectionKey;
+  late final HomeFeedRepository _repository;
+
+  @override
+  HomeProductPageState build() {
+    _repository = ref.watch(homeFeedRepositoryProvider);
+    scheduleMicrotask(() {
+      if (ref.mounted) {
+        unawaited(_loadPage(pageNumber: 0, replaceProducts: true));
+      }
+    });
+    return HomeProductPageState.initial(pageSize: _homeProductsPageSize);
+  }
+
+  Future<void> loadNextPage() async {
+    if (!state.canLoadNextPage) {
+      return;
+    }
+
+    await _loadPage(pageNumber: state.nextPageNumber, replaceProducts: false);
+  }
+
+  Future<void> retry() async {
+    if (state.isInitialLoading || state.isLoadingNextPage) {
+      return;
+    }
+
+    final nextPageNumber = state.products.isEmpty ? 0 : state.nextPageNumber;
+    await _loadPage(
+      pageNumber: nextPageNumber,
+      replaceProducts: state.products.isEmpty,
+    );
+  }
+
+  Future<void> _loadPage({
+    required int pageNumber,
+    required bool replaceProducts,
+  }) async {
+    final isInitialRequest = replaceProducts && state.products.isEmpty;
+    state = state.copyWith(
+      isInitialLoading: isInitialRequest,
+      isLoadingNextPage: !isInitialRequest,
+      clearErrorMessage: true,
+    );
+
+    try {
+      final page = await _repository.fetchSectionProducts(
+        sectionKey: _sectionKey,
+        pageNumber: pageNumber,
+        pageSize: state.pageSize,
+      );
+
+      if (!ref.mounted) {
+        return;
+      }
+
+      final products = replaceProducts
+          ? page.content
+          : List<HomeProductPreview>.unmodifiable([
+              ...state.products,
+              ...page.content,
+            ]);
+
+      state = state.copyWith(
+        products: products,
+        pageNumber: page.pageNumber,
+        pageSize: page.pageSize,
+        totalElements: page.totalElements,
+        totalPages: page.totalPages,
+        isLast: page.isLast,
+        isInitialLoading: false,
+        isLoadingNextPage: false,
+        clearErrorMessage: true,
+      );
+    } catch (_) {
+      if (!ref.mounted) {
+        return;
+      }
+
+      state = state.copyWith(
+        isInitialLoading: false,
+        isLoadingNextPage: false,
+        errorMessage: 'Impossible de charger les produits.',
+      );
+    }
+  }
+}
+
+abstract class HomeFeedRepository {
+  Future<HomePageResponse<HomeProductPreview>> fetchSectionProducts({
+    required HomeProductSectionKey sectionKey,
+    required int pageNumber,
+    required int pageSize,
+  });
+}
+
+class HomePageResponse<T> {
+  const HomePageResponse({
+    required this.content,
+    required this.pageNumber,
+    required this.pageSize,
+    required this.totalElements,
+    required this.totalPages,
+    required this.isLast,
+  });
+
+  final List<T> content;
+  final int pageNumber;
+  final int pageSize;
+  final int totalElements;
+  final int totalPages;
+  final bool isLast;
+}
+
+class MockHomeFeedRepository implements HomeFeedRepository {
+  const MockHomeFeedRepository({
+    this.responseDelay = const Duration(milliseconds: 450),
+    this.totalElementsPerSection = 34,
+  });
+
+  final Duration responseDelay;
+  final int totalElementsPerSection;
+
+  @override
+  Future<HomePageResponse<HomeProductPreview>> fetchSectionProducts({
+    required HomeProductSectionKey sectionKey,
+    required int pageNumber,
+    required int pageSize,
+  }) async {
+    if (responseDelay > Duration.zero) {
+      await Future<void>.delayed(responseDelay);
+    }
+
+    final totalPages = (totalElementsPerSection / pageSize).ceil();
+    final startIndex = pageNumber * pageSize;
+    final endIndex = math.min(startIndex + pageSize, totalElementsPerSection);
+    final content = startIndex >= totalElementsPerSection
+        ? const <HomeProductPreview>[]
+        : List<HomeProductPreview>.unmodifiable(
+            List.generate(endIndex - startIndex, (index) {
+              return _buildProductPreview(
+                category: sectionKey.category,
+                sectionIndex: sectionKey.sectionIndex,
+                productIndex: startIndex + index,
+              );
+            }),
+          );
+
+    return HomePageResponse<HomeProductPreview>(
+      content: content,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+      totalElements: totalElementsPerSection,
+      totalPages: totalPages,
+      isLast: pageNumber >= totalPages - 1,
+    );
+  }
+}
+
 List<HomeProductSection> _buildSections(HomeCategory category) {
+  return List<HomeProductSection>.unmodifiable(
+    List.generate(8, (sectionIndex) {
+      final key = HomeProductSectionKey(
+        category: category,
+        sectionIndex: sectionIndex,
+      );
+
+      return HomeProductSection(
+        id: key.id,
+        title: _sectionTitles(category)[sectionIndex],
+        key: key,
+      );
+    }),
+  );
+}
+
+HomeProductPreview _buildProductPreview({
+  required HomeCategory category,
+  required int sectionIndex,
+  required int productIndex,
+}) {
   final catalog = switch (category) {
     HomeCategory.products => _productCatalog,
     HomeCategory.services => _serviceCatalog,
     HomeCategory.experiences => _experienceCatalog,
   };
+  final item = catalog[(sectionIndex + productIndex) % catalog.length];
+  final district =
+      _districts[(sectionIndex + productIndex) % _districts.length];
+  final seed = '${category.name}-${sectionIndex + 1}-${productIndex + 1}';
 
-  return List<HomeProductSection>.unmodifiable(
-    List.generate(8, (sectionIndex) {
-      final sectionNumber = sectionIndex + 1;
-      final title = _sectionTitles(category)[sectionIndex];
-      final products = List<HomeProductPreview>.unmodifiable(
-        List.generate(12, (productIndex) {
-          final item = catalog[(sectionIndex + productIndex) % catalog.length];
-          final district =
-              _districts[(sectionIndex + productIndex) % _districts.length];
-          final seed = '${category.name}-$sectionNumber-${productIndex + 1}';
-
-          return HomeProductPreview(
-            id: seed,
-            name: item.name,
-            price: item.price,
-            sellerInfo: '${item.seller} · $district',
-            photoUrl: 'https://picsum.photos/seed/yangu-$seed/640/480',
-          );
-        }),
-      );
-
-      return HomeProductSection(
-        id: '${category.name}-$sectionNumber',
-        title: title,
-        products: products,
-      );
-    }),
+  return HomeProductPreview(
+    id: seed,
+    name: item.name,
+    price: item.price,
+    sellerInfo: '${item.seller} - $district',
+    photoUrl: 'https://picsum.photos/seed/yangu-$seed/640/480',
   );
 }
 

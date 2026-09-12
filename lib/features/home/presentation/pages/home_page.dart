@@ -16,67 +16,145 @@ class HomePage extends ConsumerWidget {
 
     return SafeArea(
       child: CustomScrollView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         slivers: [
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                const SearchButton(),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: SizedBox(
-                    height: 42,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minWidth: constraints.maxWidth,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                for (final category in HomeCategory.values) ...[
-                                  HomeChoiceChip(
-                                    label: category.label,
-                                    isSelected: selectedCategory == category,
-                                    onSelected: () {
-                                      ref
-                                          .read(
-                                            homeCategoryControllerProvider
-                                                .notifier,
-                                          )
-                                          .select(category);
-                                    },
-                                  ),
-                                  if (category != HomeCategory.values.last)
-                                    const SizedBox(width: 10),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
+            child: _HomeHeader(
+              selectedCategory: selectedCategory,
+              onCategorySelected: (category) {
+                ref
+                    .read(homeCategoryControllerProvider.notifier)
+                    .select(category);
+              },
             ),
           ),
           SliverList.builder(
             itemCount: sections.length,
             itemBuilder: (context, index) {
-              return HomeProductSectionList(
+              return _AnimatedHomeSection(
                 key: ValueKey(sections[index].id),
-                section: sections[index],
+                position: index,
+                child: HomeProductSectionList(section: sections[index]),
               );
             },
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
       ),
+    );
+  }
+}
+
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({
+    required this.selectedCategory,
+    required this.onCategorySelected,
+  });
+
+  final HomeCategory selectedCategory;
+  final ValueChanged<HomeCategory> onCategorySelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+
+    final child = Column(
+      children: [
+        const SearchButton(),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SizedBox(
+            height: 42,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (final category in HomeCategory.values) ...[
+                          HomeChoiceChip(
+                            label: category.label,
+                            isSelected: selectedCategory == category,
+                            onSelected: () => onCategorySelected(category),
+                          ),
+                          if (category != HomeCategory.values.last)
+                            const SizedBox(width: 10),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+
+    if (reduceMotion) {
+      return child;
+    }
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+class _AnimatedHomeSection extends StatelessWidget {
+  const _AnimatedHomeSection({
+    required this.position,
+    required this.child,
+    super.key,
+  });
+
+  final int position;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).disableAnimations) {
+      return child;
+    }
+
+    final duration = Duration(
+      milliseconds: 220 + (position.clamp(0, 3).toInt() * 35),
+    );
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 14 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
